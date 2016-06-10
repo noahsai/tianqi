@@ -44,9 +44,10 @@ tianqi::tianqi(QWidget *parent) :
     setLayout(ui->verticalLayout);
     //citycode="101280901";//默认肇庆～～
     timer =new QTimer(this);
+    timer->setInterval(900000);//15分钟刷新一次
     timer->setSingleShot(false);
     connect(timer,SIGNAL(timeout()),this,SLOT(get7data()));
-    timer->start(600000);//20分钟刷新一次
+    timer->start();
     //timer->start(2500);/2.5秒一次，用于测试
     get7data();
 
@@ -88,9 +89,10 @@ void tianqi::set7(){
     QRegularExpression reg;
     QRegularExpressionMatch match;
     QRegularExpressionMatchIterator matchs;
+    QNetworkReply *re = qobject_cast<QNetworkReply *>(sender());
 
-    QString html=reply->readAll();
-    reply->deleteLater();
+    QString html=re->readAll();
+    re->deleteLater();
     qDebug()<<"Got 7day data.";
     manager->clearAccessCache();
     reg.setPattern("id=\"7d\"[\\s\\S]+?分时段预报</em>");
@@ -182,8 +184,10 @@ void tianqi::set7(){
 void tianqi::setsk(){
     qDebug()<<"Got sk data.";
     QStringList list;
-    QString html=reply->readAll();
-    reply->deleteLater();
+    QNetworkReply *re = qobject_cast<QNetworkReply *>(sender());
+
+    QString html=re->readAll();
+    re->deleteLater();
     //qDebug()<<html;
     manager->clearAccessCache();
 
