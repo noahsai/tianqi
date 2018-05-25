@@ -8,6 +8,14 @@
 #include<QNetworkReply>
 #include<QRegularExpression>
 #include<QListWidgetItem>
+#include<QFile>
+#include<QIODevice>
+#include<QJsonArray>
+#include<QJsonObject>
+#include<QJsonValue>
+#include<QJsonDocument>
+#include<QJsonParseError>
+
 namespace Ui {
 class search;
 }
@@ -34,8 +42,12 @@ private:
     QNetworkReply *reply;
     QNetworkAccessManager *manager;
     void closeEvent(QCloseEvent *);
+    void findinfile();
     QString key;
     bool stop;
+    QJsonDocument* document;//城市josn数据
+    QJsonArray tmp ;
+    QString oldkey;
 };
 
 #endif // SEARCH_H

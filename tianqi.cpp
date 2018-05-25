@@ -50,7 +50,7 @@ tianqi::tianqi(QWidget *parent) :
     timer->start();
     //timer->start(2500);/2.5秒一次，用于测试
     get7data();
-
+    this->resize(50,50);//设小点，让程序自己调整最适合大小
 }
 
 tianqi::~tianqi()
@@ -232,6 +232,7 @@ void tianqi::setsk(){
                 pixmap=pixmap.fromImage(image);
                QPixmap pix=pixmap.scaled(70,70,Qt::KeepAspectRatio,Qt::SmoothTransformation);
                 ui->icon->setPixmap(pix);
+                trayIcon->setIcon(QIcon(pix));
             }
             else if(data.indexOf("aqi")!=-1)
             {

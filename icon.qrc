@@ -69,5 +69,6 @@
         <file>n32.png</file>
         <file>n33.png</file>
         <file>icon.png</file>
+        <file>city_data</file>
     </qresource>
 </RCC>
