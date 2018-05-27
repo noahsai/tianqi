@@ -152,6 +152,8 @@ void tianqi::set7(){
             tmp.remove("℃");
             ui->temp->setText(tmp);
             ui->icon->setPixmap(pixmap);
+            trayIcon->setIcon(QIcon(pixmap));
+
             break;
         case 1:
             ui->date2->setText(date);
@@ -226,6 +228,7 @@ void tianqi::setsk(){
                 text.remove("\"");
                 QImage image;
                 image.load(":/"+text);
+                if(image.isNull()) continue;
                 image = colorchange(&image);
               //  QPixmap pixmap(":/"+wea);
                 QPixmap pixmap ;
@@ -233,6 +236,13 @@ void tianqi::setsk(){
                QPixmap pix=pixmap.scaled(70,70,Qt::KeepAspectRatio,Qt::SmoothTransformation);
                 ui->icon->setPixmap(pix);
                 trayIcon->setIcon(QIcon(pix));
+                //获取背景图片======
+                QString url="http://i.tq121.com.cn/i/wap2017/bgs/"+text+".jpg";//这个api可能并不长久
+                QString refer="http://m.weather.com.cn/mweather/101280901"+citycode+".shtml?location=now";
+                request.setRawHeader(QByteArray("Referer"), refer.toLatin1());
+                request.setUrl(QUrl(url));
+                reply=manager->get(request);
+                connect(reply,SIGNAL(finished()),this,SLOT(setbgimg()));
             }
             else if(data.indexOf("aqi")!=-1)
             {
@@ -312,7 +322,13 @@ void tianqi::paintEvent(QPaintEvent *e)
     QColor  color;
     color.setNamedColor(bgcolor);
     color.setAlpha(alph);
-    p.fillRect(rect(), color);
+    if(!bgpix.isNull())
+    {
+        p.drawPixmap(rect(),bgpix);
+        p.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+    }
+    p.fillRect(rect(),color);
+    p.end();
     }
 }
 void tianqi::seticons(){
@@ -573,4 +589,22 @@ void tianqi::callsetting()
     set->show();
     qDebug()<<"callsetting";
 
+}
+
+void tianqi::setbgimg(){
+    qDebug()<<"set bg img";
+    QNetworkReply *re = qobject_cast<QNetworkReply *>(sender());
+    if(re->error() != QNetworkReply::NoError) {
+        bgpix = QPixmap();
+        return;
+    }
+    QPixmap pix;
+    pix.loadFromData(re->readAll());
+    int w , h;
+    w = pix.width();
+    h = pix.height();
+    h = this->height()/this->width() * w;
+    bgpix = pix.copy(0,0,w,h);
+    re->deleteLater();
+    update();
 }

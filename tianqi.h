@@ -48,6 +48,7 @@ private slots:
     void trayiconactive();
     void callsetting();
     void tolock();
+    void setbgimg();
 
 private:
     Ui::tianqi *ui;
@@ -79,6 +80,7 @@ QGraphicsColorizeEffect *e1;
     int alph;
     bool locked;
     QAction *lockitem;
+    QPixmap bgpix;
 
 protected :
          void paintEvent(QPaintEvent *);
