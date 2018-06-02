@@ -70,5 +70,23 @@
         <file>n33.png</file>
         <file>icon.png</file>
         <file>city_data</file>
+        <file>d49.png</file>
+        <file>d53.png</file>
+        <file>d54.png</file>
+        <file>d55.png</file>
+        <file>d56.png</file>
+        <file>d57.png</file>
+        <file>d58.png</file>
+        <file>d301.png</file>
+        <file>d302.png</file>
+        <file>n49.png</file>
+        <file>n53.png</file>
+        <file>n54.png</file>
+        <file>n55.png</file>
+        <file>n56.png</file>
+        <file>n57.png</file>
+        <file>n58.png</file>
+        <file>n301.png</file>
+        <file>n302.png</file>
     </qresource>
 </RCC>

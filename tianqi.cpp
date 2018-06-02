@@ -99,7 +99,7 @@ void tianqi::set7(){
     match=reg.match(html);
     if(!match.hasMatch()) return;
     html=match.captured(0);
-    qDebug()<<html;
+    //qDebug()<<html;
     reg.setPattern("<li[\\s\\S]+?</li>");
     matchs=reg.globalMatch(html);
     for(int it=0;it<4&&matchs.hasNext();it++)
@@ -190,7 +190,7 @@ void tianqi::setsk(){
 
     QString html=re->readAll();
     re->deleteLater();
-    //qDebug()<<html;
+    qDebug()<<html;
     manager->clearAccessCache();
 
     if(html.indexOf("dataSK")!=-1)
@@ -226,6 +226,16 @@ void tianqi::setsk(){
             {
                 text=data.split(":").takeLast();
                 text.remove("\"");
+                //获取背景图片======
+                QString url="http://i.tq121.com.cn/i/wap2017/bgs/"+text+".jpg";//这个api可能并不长久
+                qDebug()<<"img url:"<<url;
+                QString refer="http://m.weather.com.cn/mweather/"+citycode+".shtml?location=now";
+                request.setRawHeader(QByteArray("Referer"), refer.toLatin1());
+                request.setUrl(QUrl(url));
+                reply=manager->get(request);
+                connect(reply,SIGNAL(finished()),this,SLOT(setbgimg()));
+
+                //想放在前面就只有去掉continue;
                 QImage image;
                 image.load(":/"+text);
                 if(image.isNull()) continue;
@@ -236,13 +246,7 @@ void tianqi::setsk(){
                QPixmap pix=pixmap.scaled(70,70,Qt::KeepAspectRatio,Qt::SmoothTransformation);
                 ui->icon->setPixmap(pix);
                 trayIcon->setIcon(QIcon(pix));
-                //获取背景图片======
-                QString url="http://i.tq121.com.cn/i/wap2017/bgs/"+text+".jpg";//这个api可能并不长久
-                QString refer="http://m.weather.com.cn/mweather/101280901"+citycode+".shtml?location=now";
-                request.setRawHeader(QByteArray("Referer"), refer.toLatin1());
-                request.setUrl(QUrl(url));
-                reply=manager->get(request);
-                connect(reply,SIGNAL(finished()),this,SLOT(setbgimg()));
+
             }
             else if(data.indexOf("aqi")!=-1)
             {
@@ -596,6 +600,7 @@ void tianqi::setbgimg(){
     QNetworkReply *re = qobject_cast<QNetworkReply *>(sender());
     if(re->error() != QNetworkReply::NoError) {
         bgpix = QPixmap();
+        qDebug()<<"get bgimg error!"<<bgpix.isNull();
         return;
     }
     QPixmap pix;
