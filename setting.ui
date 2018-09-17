@@ -133,6 +133,13 @@
       </layout>
      </item>
      <item>
+      <widget class="QCheckBox" name="usebgcolor">
+       <property name="text">
+        <string>使用纯色背景</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>

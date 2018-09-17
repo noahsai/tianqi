@@ -15,11 +15,10 @@ class setting : public QDialog
 
 public:
     explicit setting(QWidget *parent = 0);
-    void init(QString& fc, QString& bgc, QString& ic, int alp);
+    void init(QString& fc, QString& bgc, QString& ic, int alp ,int ubgc);
     ~setting();
 signals:
-    void settheme(QString fc, QString bgc, QString ic, int alp);
-
+    void settheme(QString fc, QString bgc, QString ic, int alp,int ubgc);
 private slots:
     void on_pushButton_2_clicked();
 
@@ -33,6 +32,8 @@ private slots:
 
     void on_pushButton_clicked();
 
+    void on_usebgcolor_clicked(bool checked);
+
 private:
     Ui::setting *ui;
     QString ofc,obgc,oic;
@@ -41,7 +42,7 @@ private:
     QColor color;
     QString colorname;
     QPalette pe;
-
+    int usebgc;
 };
 
 #endif // SETTING_H

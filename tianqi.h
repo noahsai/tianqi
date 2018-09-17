@@ -38,7 +38,8 @@ public:
 
 public slots:
     void get7data();
-    void settheme(QString fc, QString bgc, QString ic, int alp);
+    void settheme(QString fc, QString bgc, QString ic, int alp ,int ubgc);
+
 private slots:
     void set7();
     void setsk();
@@ -47,7 +48,7 @@ private slots:
     void on_city_clicked();
     void trayiconactive();
     void callsetting();
-    void tolock();
+    //void tolock();
     void setbgimg();
 
 private:
@@ -75,12 +76,13 @@ private:
     bool mousepressed;
     QPoint oldpos;
     QTimer *timer;
-QGraphicsColorizeEffect *e1;
+    QGraphicsColorizeEffect *e1;
     QString fcolor,bgcolor,icolor;
     int alph;
-    bool locked;
-    QAction *lockitem;
+    //bool locked;
+    //QAction *lockitem;
     QPixmap bgpix;
+    int  usebgc;
 
 protected :
          void paintEvent(QPaintEvent *);

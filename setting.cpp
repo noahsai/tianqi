@@ -28,6 +28,8 @@ void setting::on_pushButton_2_clicked()
         out<<ui->bgcolor->text();
         out<<ui->icolor->text();
         out<<(int) ui->alph->value();
+        if(ui->usebgcolor->isChecked()) out<<1;
+        else out<<0;
     }
     else {
         qDebug()<<"setting:setting file open error!";
@@ -36,12 +38,13 @@ void setting::on_pushButton_2_clicked()
     close();
 }
 
-void setting::init(QString &fc, QString &bgc, QString &ic, int alp)
+void setting::init(QString &fc, QString &bgc, QString &ic, int alp ,int ubgc)
 {
     ofc=fc;
     obgc=bgc;
     oic=ic;
     oalp=alp;
+    usebgc = ubgc;
     //QPalette pe;
     pe.setColor(QPalette::Button,QColor(fc));
     ui->fontcolor->setPalette(pe);
@@ -57,6 +60,8 @@ void setting::init(QString &fc, QString &bgc, QString &ic, int alp)
   //  ui->icolor->setStyleSheet("background-color:"+ic);
     ui->alph->setValue(alp);
   //  this->setStyleSheet("color:#000000");
+    if(ubgc==0) ui->usebgcolor->setChecked(false);
+    else ui->usebgcolor->setChecked(true);
 }
 
 
@@ -74,7 +79,7 @@ void setting::on_fontcolor_clicked()
         pe = ui->fontcolor->palette();
         pe.setColor(QPalette::Button,QColor(colorname));
         ui->fontcolor->setPalette(pe);
-       emit settheme(colorname,"","",-1);
+       emit settheme(colorname,"","",-1,-1);
     }
 }
 
@@ -92,7 +97,7 @@ void setting::on_bgcolor_clicked()
         pe = ui->bgcolor->palette();
         pe.setColor(QPalette::Button,QColor(colorname));
         ui->bgcolor->setPalette(pe);
-       emit settheme("",colorname,"",-1);
+       emit settheme("",colorname,"",-1,-1);
     }
 }
 
@@ -110,17 +115,24 @@ void setting::on_icolor_clicked()
         pe = ui->icolor->palette();
         pe.setColor(QPalette::Button,QColor(colorname));
         ui->icolor->setPalette(pe);
-       emit settheme("","",colorname,-1);
+       emit settheme("","",colorname,-1,-1);
     }
 }
 
 void setting::on_alph_valueChanged(int value)
 {
-   emit settheme("","","",value);
+   emit settheme("","","",value,-1);
 }
 
 void setting::on_pushButton_clicked()
 {
-    emit settheme(ofc,obgc,oic,oalp);
+    emit settheme(ofc,obgc,oic,oalp,-1);
     close();
+}
+
+void setting::on_usebgcolor_clicked(bool checked)
+{
+    if(checked)    emit settheme("","","",-1,1);
+
+    else   emit settheme("","","",-1,0);
 }

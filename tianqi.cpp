@@ -10,7 +10,7 @@ tianqi::tianqi(QWidget *parent) :
     ui->setupUi(this);
     setAttribute(Qt::WA_TranslucentBackground );//背景透明
     setWindowFlags(Qt::FramelessWindowHint
-                   |Qt::SplashScreen);
+                   |Qt::Tool);
 
     QDir().mkpath(cfgpath);
     e1 = new QGraphicsColorizeEffect(this);
@@ -20,11 +20,12 @@ tianqi::tianqi(QWidget *parent) :
     manager= new QNetworkAccessManager(this);
     request.setRawHeader(QByteArray("User-Agent"), U_A);
 
-    locked=false;
+    //locked=false;
+    usebgc = false;
     sear=NULL;
     reply=NULL;
     set=NULL;
-    lockitem=NULL;
+    //lockitem=NULL;
     mousepressed=false;
     oldpos.setX(0);
     oldpos.setY(0);
@@ -42,7 +43,7 @@ tianqi::tianqi(QWidget *parent) :
     //--------------------------
     readset();
     setLayout(ui->verticalLayout);
-    //citycode="101280901";//默认肇庆～～
+    //citycode="101010100";//默认首都～～
     timer =new QTimer(this);
     timer->setInterval(900000);//15分钟刷新一次
     timer->setSingleShot(false);
@@ -133,7 +134,6 @@ void tianqi::set7(){
         QFont ft;//根据wea长度设置字体大小
         wea.length()>4 ? ft.setPointSize(13) : ft.setPointSize(16);
         ui->weather->setFont(ft);
-        ui->weather->setText(wea);
         //-------------------------------------
         QImage im;
         im.load(":/"+image);
@@ -148,7 +148,8 @@ void tianqi::set7(){
         {
         case 0:
             ui->date->setText(date);
-            ui->weather->setText(wea);//只有今天显示天气状况
+            ui->weather->setText(wea);
+            ui->icon->setToolTip(wea);
             tmp.remove("℃");
             ui->temp->setText(tmp);
             ui->icon->setPixmap(pixmap);
@@ -274,7 +275,7 @@ void tianqi::setsk(){
                     else if(num<=100)
                     {
                         text+="良";
-                        pe.setColor(QPalette::Window,QColor(255, 220, 19));
+                        pe.setColor(QPalette::Window,QColor(255, 171, 0));
                         ui->pm25->setPalette(pe);
                       //  ui->pm25->setStyleSheet("background-color:rgb(255, 220, 19);color: rgb(255, 255, 255);");
 
@@ -322,17 +323,17 @@ void tianqi::paintEvent(QPaintEvent *e)
 {
     if(!mousepressed)
     {
-    QPainter p(this);
-    QColor  color;
-    color.setNamedColor(bgcolor);
-    color.setAlpha(alph);
-    if(!bgpix.isNull())
-    {
-        p.drawPixmap(rect(),bgpix);
-        p.setCompositionMode(QPainter::CompositionMode_DestinationIn);
-    }
-    p.fillRect(rect(),color);
-    p.end();
+        QPainter p(this);
+        QColor  color;
+        color.setNamedColor(bgcolor);
+        color.setAlpha(alph);
+        if(!bgpix.isNull() && (usebgc == 0) )
+        {
+            p.drawPixmap(rect(),bgpix);
+            p.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+        }
+        p.fillRect(rect(),color);//别用else，这是用来绘制透明的
+        p.end();
     }
 }
 void tianqi::seticons(){
@@ -342,18 +343,19 @@ void tianqi::saveset(){
     QSettings settings("ShengSoft", "Weather");
     settings.setValue("citycode",citycode);
    // settings.setValue("size", size());//因为没得调大小，所以不要记录大小了
-    settings.setValue("locked",locked);
+    //settings.setValue("locked",locked);
     settings.setValue("pos", pos());
+    settings.setValue("usebgc", usebgc);
 }
 
 void tianqi::readset(){
     QSettings settings("ShengSoft", "Weather");
     citycode=settings.value("citycode",QString("101280901")).toString();
  //   resize(settings.value("size", QSize(154, 144)).toSize());//因为没得调大小，所以不要记录大小了
-    locked=settings.value("locked",false).toBool();
-    qDebug()<<"readset locked:"<<locked;
-    locked=!locked;//因为tolock函数是一个动作，想恢复锁定就要先设为为锁定，这样tolock就是锁定动作了
-    tolock();
+    //locked=settings.value("locked",false).toBool();
+    //qDebug()<<"readset locked:"<<locked;
+    //locked=!locked;//因为tolock函数是一个动作，想恢复锁定就要先设为为锁定，这样tolock就是锁定动作了
+    //tolock();
     int x=QApplication::desktop()->width()-250;
     QPoint point;
     point=settings.value("pos", QPoint(x, 50)).toPoint();
@@ -419,14 +421,14 @@ void tianqi::creattrayicon()
     connect(change,SIGNAL(triggered()),ui->city,SLOT(click()));
     QAction *set=new QAction(tr("设置"),this);
     connect(set,SIGNAL(triggered()),this,SLOT(callsetting()));
-    lockitem=new QAction(tr("锁定"),this);
-    connect(lockitem,SIGNAL(triggered()),this,SLOT(tolock()));
+    //lockitem=new QAction(tr("锁定"),this);
+    //connect(lockitem,SIGNAL(triggered()),this,SLOT(tolock()));
     quitAction = new QAction(tr("退出"), this);
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));//若触发了退出就退出程序
     trayIconMenu = new QMenu(this);//菜单
     trayIconMenu->addAction(change);//
     trayIconMenu->addAction(set);
-    trayIconMenu->addAction(lockitem);
+    //trayIconMenu->addAction(lockitem);
 
     trayIconMenu->addAction(quitAction);//把退出加到入菜单项
     trayIcon->setContextMenu(trayIconMenu);//设置托盘上下文菜单为trayIconMenu
@@ -441,13 +443,15 @@ void tianqi::trayiconactive()
 //    else hide();
 }
 
+/*
+//不要置顶的功能了
 void tianqi::tolock()
 {
 
     if(locked)//取消置顶
     {
         setWindowFlags(Qt::FramelessWindowHint
-                       |Qt::SplashScreen );
+                       |Qt::Tool);
         XRectangle* myrect = new XRectangle;
         myrect->x = 0;
         myrect->y = 0;
@@ -464,7 +468,7 @@ void tianqi::tolock()
         setWindowFlags(Qt::FramelessWindowHint
                        |Qt::BypassWindowManagerHint
                        |Qt::WindowStaysOnTopHint
-                       |Qt::SplashScreen );
+                       |Qt::Tool);
         XShapeCombineRectangles(QX11Info::display(), winId(), ShapeInput,0,0, NULL, 0, ShapeSet, YXBanded);
         qDebug()<<"locked";
         lockitem->setText("取消置顶");
@@ -472,6 +476,7 @@ void tianqi::tolock()
         show();
     }
 }
+*/
 void tianqi::mousePressEvent(QMouseEvent* event)
 {
     if(event->button()==Qt::LeftButton && !mousepressed)
@@ -546,7 +551,7 @@ void tianqi::updateicon(QImage& im,QLabel* icon)
     icon->setPixmap(pixmap);
 }
 
-void tianqi::settheme(QString fc, QString bgc, QString ic, int alp)
+void tianqi::settheme(QString fc, QString bgc, QString ic, int alp,int ubgc)
 {
     if(!fc.isEmpty()&&fcolor!=fc) {
         fcolor=fc;
@@ -559,7 +564,6 @@ void tianqi::settheme(QString fc, QString bgc, QString ic, int alp)
     }
     if(!bgc.isEmpty()&&bgcolor!=bgc) {
         bgcolor=bgc;
-        update();
     }
     if(!ic.isEmpty()&&icolor!=ic){
         icolor=ic;
@@ -575,8 +579,9 @@ void tianqi::settheme(QString fc, QString bgc, QString ic, int alp)
     }
     if(alp!=-1&&alph!=alp){
         alph=alp;
-        update();
     }
+   if(ubgc!=-1) usebgc = ubgc;
+   update();
 
 }
 
@@ -587,8 +592,8 @@ void tianqi::callsetting()
     set->setAttribute(Qt::WA_DeleteOnClose);
     set->setWindowTitle("设置主题");
     set->setModal(true);
-    set->init(fcolor,bgcolor,icolor,alph);
-    connect(set,SIGNAL(settheme(QString,QString,QString,int)),this,SLOT(settheme(QString,QString,QString,int)));
+    set->init(fcolor,bgcolor,icolor,alph,usebgc);
+    connect(set,SIGNAL(settheme(QString,QString,QString,int,int)),this,SLOT(settheme(QString,QString,QString,int,int)));
     set->move(QApplication::desktop()->width()/2-set->width()/2,QApplication::desktop()->height()/2-set->height()/2);
     set->show();
     qDebug()<<"callsetting";
@@ -613,3 +618,4 @@ void tianqi::setbgimg(){
     re->deleteLater();
     update();
 }
+
