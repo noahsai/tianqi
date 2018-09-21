@@ -28,7 +28,7 @@ public:
     explicit search(QWidget *parent = 0);
     ~search();
 signals:
-    void gotcitycode(QString&);
+    void gotcitycode(QString& , QString&);
 private slots:
     void on_lineEdit_textChanged(const QString &arg1);
     void timeout();

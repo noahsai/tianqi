@@ -41,9 +41,9 @@ tianqi::tianqi(QWidget *parent) :
     icolor="#ffffff";
     alph=150;
     //--------------------------
+    initmap();
     readset();
     setLayout(ui->verticalLayout);
-    //citycode="101010100";//默认首都～～
     timer =new QTimer(this);
     timer->setInterval(900000);//15分钟刷新一次
     timer->setSingleShot(false);
@@ -61,9 +61,15 @@ tianqi::~tianqi()
 }
 
 void tianqi::get7data(){
-
-    QString url="http://www.weather.com.cn/weather/"+citycode+".shtml";
+    QString url;
+    //======旧版直接解析网页======
+    //url="http://www.weather.com.cn/weather/"+citycode+".shtml";
+    //========================
+     if(citycode.left(3)=="101")   url="http://d1.weather.com.cn/wap_40d/"+citycode+".html";
+    else  url="http://d1.weather.com.cn/weixinfc_gw/"+citycode+".htm";
     request.setUrl(QUrl(url));
+    QString refer="http://m.weather.com.cn/mweather/"+citycode+".shtml";
+    request.setRawHeader(QByteArray("Referer"), refer.toLatin1());
     reply=manager->get(request);
     connect(reply,SIGNAL(finished()),this,SLOT(set7()));
 
@@ -73,8 +79,10 @@ void tianqi::get7data(){
 }
 
 void tianqi::getskdata(){
-    QString url="http://d1.weather.com.cn/sk_2d/"+citycode+".html";
-    QString refer="http://www.weather.com.cn/weather/"+citycode+".shtml";
+    QString url;
+     if(citycode.left(3)=="101")   url="http://d1.weather.com.cn/sk_2d/"+citycode+".html";
+    else  url=url="http://d1.weather.com.cn/obs_forg/"+citycode+".htm";
+    QString refer="http://m.weather.com.cn/mweather/"+citycode+".shtml";
     request.setRawHeader(QByteArray("Referer"), refer.toLatin1());
     request.setUrl(QUrl(url));
     reply=manager->get(request);
@@ -96,9 +104,129 @@ void tianqi::set7(){
     re->deleteLater();
     qDebug()<<"Got 7day data.";
     manager->clearAccessCache();
+    qDebug()<<html;
+
+    reg.setPattern("{\".+?\"}");
+    matchs=reg.globalMatch(html);
+    if(!matchs.hasNext()) {
+        qDebug()<<html;
+        getskdata();
+        return;
+    }
+
+    for(int it=0;it<4&&matchs.hasNext();it++)
+    {
+        QString date;
+        QString image;
+        QString tmp;
+        QString night;
+        match=matchs.next();
+        QString li=match.captured(0);
+       // qDebug()<<li;
+         if(citycode.left(3)=="101")  {
+            reg.setPattern("009\":\".+?(?=\")");//日期
+            date=reg.match(li).captured(0);
+            reg.setPattern("016\":\".+?(?=\")");//星期
+            QString day=reg.match(li).captured(0);
+           date = date.right(2) + "(" + day.right(1) + ")";
+            //date.replace("（","\n（");
+    //       reg.setPattern("(?<=001\":\").+?(?=\")");//天气
+            reg.setPattern("(?<=001\":\").+?(?=\")");//图标
+            image=reg.match(li).captured(0);
+            image.remove(" ");
+            QString d = image;
+            reg.setPattern("(?<=002\":\").+?(?=\")");//图标
+             night =  reg.match(li).captured(0);
+            if(night != d)   night = map.value(d) +"转"+ map.value(night);
+            else night = map.value(d);
+
+            image = "d"+ image +".png";
+            reg.setPattern("(?<=003\":\")\\d+?(?=\")");//温度
+            tmp=reg.match(li).captured(0);
+            reg.setPattern("(?<=004\":\")\\d+?(?=\")");//温度
+            QString tmp2=reg.match(li).captured(0);
+            if(it != 0) tmp = tmp +"/" +tmp2 + "°";
+            qDebug()<<date<<tmp<<image;
+        //-------------------------------------
+        }
+        else {
+            reg.setPattern("fi\":\".+?(?=\")");//日期
+            date=reg.match(li).captured(0);
+            reg.setPattern("fj\":\".+?(?=\")");//星期
+            QString day=reg.match(li).captured(0);
+           date = date.right(2) + "(" + day.right(1) + ")";
+            //date.replace("（","\n（");
+    //       reg.setPattern("(?<=001\":\").+?(?=\")");//天气
+            reg.setPattern("(?<=fa\":\").+?(?=\")");//图标
+            image=reg.match(li).captured(0);
+            image.remove(" ");
+            QString d = image;
+            reg.setPattern("(?<=fb\":\").+?(?=\")");//图标
+             night =  reg.match(li).captured(0);
+            if(night != d)   night = map.value(d) +"转"+ map.value(night);
+            else night = map.value(d);
+
+            image = "d"+ image +".png";
+            reg.setPattern("(?<=fc\":\")\\d+?(?=\")");//温度
+            tmp=reg.match(li).captured(0);
+            reg.setPattern("(?<=fd\":\")\\d+?(?=\")");//温度
+            QString tmp2=reg.match(li).captured(0);
+            if(it != 0) tmp = tmp +"/" +tmp2 + "°";
+            qDebug()<<date<<tmp<<image;
+        }
+        QImage im;
+        im.load(":/"+image);
+        im = colorchange(&im);
+        QPixmap pixmap;
+        pixmap=pixmap.fromImage(im);
+        int size = 40;
+        if(it==0) size = 60;
+        pixmap=pixmap.scaled(size,size,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+
+        switch(it)
+        {
+        case 0:
+            ui->date->setText(date);
+            tmp.remove("°");
+            ui->temp->setText(tmp);
+            ui->icon->setPixmap(pixmap);
+            trayIcon->setIcon(QIcon(pixmap));
+            ui->icon->setToolTip(night);
+            break;
+        case 1:
+            ui->date2->setText(date);
+          //  tmp+="°";
+            ui->temp2->setText(tmp);
+            ui->icon2->setPixmap(pixmap);
+            ui->icon2->setToolTip(night);
+            break;
+        case 2:
+            ui->date3->setText(date);
+          //  tmp+="°";
+            ui->temp3->setText(tmp);
+            ui->icon3->setPixmap(pixmap);
+            ui->icon3->setToolTip(night);
+            break;
+        case 3:
+            ui->date4->setText(date);
+           // tmp+="";
+            ui->temp4->setText(tmp);
+            ui->icon4->setPixmap(pixmap);
+            ui->icon4->setToolTip(night);
+            break;
+        default:break;
+        }
+    }
+
+    /*
+     * 旧版直接解析网页数据
     reg.setPattern("id=\"7d\"[\\s\\S]+?分时段预报</em>");
     match=reg.match(html);
-    if(!match.hasMatch()) return;
+    if(!match.hasMatch()) {
+        qDebug()<<html;
+        getskdata();
+        return;
+    }
     html=match.captured(0);
     //qDebug()<<html;
     reg.setPattern("<li[\\s\\S]+?</li>");
@@ -126,9 +254,9 @@ void tianqi::set7(){
         tmp.remove(QRegularExpression("<.+?>"));
         tmp.remove("\n");
         if(it==0) {
-            tmp.remove(QRegularExpression("[℃/].*"));
+            tmp.remove(QRegularExpression("[°/].*"));
         }
-        else tmp.replace("℃/","/");
+        else tmp.replace("°/","/");
         qDebug()<<date<<wea<<tmp<<image;
         //-------------------------------------
         QFont ft;//根据wea长度设置字体大小
@@ -141,7 +269,7 @@ void tianqi::set7(){
         QPixmap pixmap;
         pixmap=pixmap.fromImage(im);
         int size = 40;
-        if(it==0) size = 70;
+        if(it==0) size = 60;
         pixmap=pixmap.scaled(size,size,Qt::KeepAspectRatio,Qt::SmoothTransformation);
 
         switch(it)
@@ -150,7 +278,7 @@ void tianqi::set7(){
             ui->date->setText(date);
             ui->weather->setText(wea);
             ui->icon->setToolTip(wea);
-            tmp.remove("℃");
+            tmp.remove("°");
             ui->temp->setText(tmp);
             ui->icon->setPixmap(pixmap);
             trayIcon->setIcon(QIcon(pixmap));
@@ -159,27 +287,28 @@ void tianqi::set7(){
         case 1:
             ui->date2->setText(date);
             ui->icon2->setToolTip(wea);
-          //  tmp+="°C";
+          //  tmp+="°";
             ui->temp2->setText(tmp);
             ui->icon2->setPixmap(pixmap);
             break;
         case 2:
             ui->date3->setText(date);
             ui->icon3->setToolTip(wea);
-          //  tmp+="°C";
+          //  tmp+="°";
             ui->temp3->setText(tmp);
             ui->icon3->setPixmap(pixmap);
             break;
         case 3:
             ui->date4->setText(date);
             ui->icon4->setToolTip(wea);
-           // tmp+="°C";
+           // tmp+="°";
             ui->temp4->setText(tmp);
             ui->icon4->setPixmap(pixmap);
             break;
         default:break;
         }
     }
+    */
     getskdata();
 
 }
@@ -194,9 +323,10 @@ void tianqi::setsk(){
     qDebug()<<html;
     manager->clearAccessCache();
 
-    if(html.indexOf("dataSK")!=-1)
+    if(html.indexOf("dataSK")!=-1 || html.indexOf("obs_forg")!=-1)
     {
         list=html.split(",");
+        ui->pm25->hide();//先隐藏，有才显示
         for(int i=0;i<list.length();i++)
         {
             QString text;
@@ -206,12 +336,15 @@ void tianqi::setsk(){
             {
                 text=data.split(":").takeLast();
                 text.remove("\"");
+                text.remove("}");
                 ui->city->setText(text);
             }
             else if(data.indexOf("temp\"")!=-1)
             {
                 text=data.split(":").takeLast();
                 text.remove("\"");
+                text.remove("}");
+                text+="°";
                 ui->temp->setText(text);
             }
             else if(data.indexOf("weather\"")!=-1)
@@ -219,7 +352,7 @@ void tianqi::setsk(){
                 text=data.split(":").takeLast();
                 text.remove("\"");
                 QFont ft;
-                text.length()>4 ? ft.setPointSize(13) : ft.setPointSize(16);
+                text.length()>2 ? ft.setPointSize(12) : ft.setPointSize(14);
                 ui->weather->setFont(ft);
                 ui->weather->setText(text);
             }
@@ -227,6 +360,7 @@ void tianqi::setsk(){
             {
                 text=data.split(":").takeLast();
                 text.remove("\"");
+                text.remove("}");
                 //获取背景图片======
                 QString url="http://i.tq121.com.cn/i/wap2017/bgs/"+text+".jpg";//这个api可能并不长久
                 qDebug()<<"img url:"<<url;
@@ -238,15 +372,46 @@ void tianqi::setsk(){
 
                 //想放在前面就只有去掉continue;
                 QImage image;
-                image.load(":/"+text);
+                image.load(":/"+text+".png");
                 if(image.isNull()) continue;
                 image = colorchange(&image);
               //  QPixmap pixmap(":/"+wea);
                 QPixmap pixmap ;
                 pixmap=pixmap.fromImage(image);
-               QPixmap pix=pixmap.scaled(70,70,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+               QPixmap pix=pixmap.scaled(60,60,Qt::KeepAspectRatio,Qt::SmoothTransformation);
                 ui->icon->setPixmap(pix);
                 trayIcon->setIcon(QIcon(pix));
+
+            }
+            else if(data.indexOf("SD")!=-1)//image
+            {
+                text=data.split(":").takeLast();
+                text.remove("\"");
+                text.remove("}");
+                if(text.right(1) != "%") text += "%";
+                text = "相对湿度 "+text;
+                ui->shidu->setText(text);
+
+            }
+            else if(data.indexOf("WD")!=-1)//image
+            {
+                text=data.split(":").takeLast();
+                text.remove("\"");
+                text.remove("}");
+                if(text.indexOf("无")!=-1) text = "无定向";
+                else if(text.right(1) != " ") text += " ";
+
+                ui->feng->setText(text);
+
+            }
+            else if(data.indexOf("WS")!=-1)//image
+            {
+                text=data.split(":").takeLast();
+                text.remove("\"");
+                text.remove("}");
+                if(text.right(1) != "级") text += "级";
+                text = ui->feng->text() + text;
+                ui->feng->setText(text);
 
             }
             else if(data.indexOf("aqi")!=-1)
@@ -258,17 +423,12 @@ void tianqi::setsk(){
                 text=data.split(":").takeLast();
                 text.remove("\"");
                 text.remove("}");
-                if(text.isEmpty()) {
-                    pe.setColor(QPalette::Window,QColor(0, 129, 193));
-                    ui->pm25->setPalette(pe);
-                    //ui->pm25->setStyleSheet("color: rgb(0, 129, 193);");
-                    ui->pm25->setText("暂无数据");
-                }
+                if(text.isEmpty()) continue;
                 else{
                     int num=text.toInt();
                     if(num<=50) {
                         text+="优";
-                        pe.setColor(QPalette::Window,QColor(0, 220, 106));
+                        pe.setColor(QPalette::Window,QColor("#44cf12"));
                         ui->pm25->setPalette(pe);
                         //ui->pm25->setStyleSheet("background-color:rgb(0, 220, 106);color: rgb(255, 255, 255);");
                     }
@@ -282,38 +442,39 @@ void tianqi::setsk(){
                     }
                     else if(num<=150)
                     {
-                        text+="轻度污染";
+                        text+="轻度";
                         pe.setColor(QPalette::Window,QColor(238, 147, 0));
                         ui->pm25->setPalette(pe);
                         //ui->pm25->setStyleSheet("background-color:rgb(238, 147, 0);color: rgb(255, 255, 255);");
                     }
                     else if(num<=200)
                     {
-                        text+="中毒污染";
+                        text+="中度";
                         pe.setColor(QPalette::Window,QColor(204, 95, 97));
                         ui->pm25->setPalette(pe);
                         //ui->pm25->setStyleSheet("background-color:rgb(204, 95, 97);color: rgb(255, 255, 255);");
                     }
                     else if(num<=300)
                     {
-                        text+="重度污染";
+                        text+="重度";
                         pe.setColor(QPalette::Window,QColor(180, 69, 154));
                         ui->pm25->setPalette(pe);
                         //ui->pm25->setStyleSheet("background-color:rgb(180, 69, 154);color: rgb(255, 255, 255);");
                     }
                     else if(num>300)
                     {
-                        text+="严重污染";
+                        text+="严重";
                         pe.setColor(QPalette::Window,QColor(138, 0, 0));
                         ui->pm25->setPalette(pe);
                         //ui->pm25->setStyleSheet("background-color:rgb(138, 0, 0);color: rgb(255, 255, 255);");
                     }
                     ui->pm25->setText(text);
+                    ui->pm25->show();//有数据就显示
                 }
             }
         }
     }
-    QString text=ui->city->text()+" "+ui->temp->text()+"℃ "+ui->weather->text();
+    QString text=ui->city->text()+" "+ui->temp->text()+"° "+ui->weather->text();
     trayIcon->setToolTip(text);
    // QPalette pal = palette();
 
@@ -342,6 +503,7 @@ void tianqi::seticons(){
 void tianqi::saveset(){
     QSettings settings("ShengSoft", "Weather");
     settings.setValue("citycode",citycode);
+    settings.setValue("cityname",cityname);
    // settings.setValue("size", size());//因为没得调大小，所以不要记录大小了
     //settings.setValue("locked",locked);
     settings.setValue("pos", pos());
@@ -350,7 +512,9 @@ void tianqi::saveset(){
 
 void tianqi::readset(){
     QSettings settings("ShengSoft", "Weather");
-    citycode=settings.value("citycode",QString("101280901")).toString();
+    citycode=settings.value("citycode",QString("101010100")).toString();//默认北京
+    cityname=settings.value("cityname",QString("北京")).toString();
+    ui->city->setText(cityname);
  //   resize(settings.value("size", QSize(154, 144)).toSize());//因为没得调大小，所以不要记录大小了
     //locked=settings.value("locked",false).toBool();
     //qDebug()<<"readset locked:"<<locked;
@@ -398,17 +562,19 @@ void tianqi::on_city_clicked()
         sear=new search(this);
         sear->setWindowTitle("搜索城市");
         sear->setWindowFlags(Qt::Dialog);
-        connect(sear,SIGNAL(gotcitycode(QString&)),this,SLOT(gotcode(QString&)));
+        connect(sear,SIGNAL(gotcitycode(QString& , QString&)),this,SLOT(gotcode(QString& ,QString&)));
         sear->move(QApplication::desktop()->width()/2-sear->width()/2,QApplication::desktop()->height()/2-sear->height()/2);
         sear->show();
     }
     sear->show();
 }
-void tianqi::gotcode(QString& code)
+void tianqi::gotcode(QString& code , QString& name)
 {
     if(code!="")
     {
         citycode=code;
+        cityname = name;
+        ui->city->setText(name);
         saveset();
         get7data();
     }
@@ -613,9 +779,57 @@ void tianqi::setbgimg(){
     int w , h;
     w = pix.width();
     h = pix.height();
-    h = this->height()/this->width() * w;
+    h = (this->height()*1.0/this->width()) * w ;
+    //qDebug()<<w<<h;
     bgpix = pix.copy(0,0,w,h);
     re->deleteLater();
     update();
+}
+
+void tianqi::initmap()
+{
+    map["00"]="晴";
+    map["01"]="多云";
+    map["02"]="阴";
+    map["03"]="阵雨";
+    map["04"]="雷阵雨";
+    map["05"]="雷阵雨伴有冰雹";
+    map["06"]="雨夹雪";
+    map["07"]="小雨";
+    map["08"]="中雨";
+    map["09"]="大雨";
+    map["10"]="暴雨";
+    map["11"]="大暴雨";
+    map["12"]="特大暴雨";
+    map["13"]="阵雪";
+    map["14"]="小雪";
+    map["15"]="中雪";
+    map["16"]="大雪";
+    map["17"]="暴雪";
+    map["18"]="雾";
+    map["19"]="冻雨";
+    map["20"]="沙尘暴";
+    map["21"]="小到中雨";
+    map["22"]="中到大雨";
+    map["23"]="大到暴雨";
+    map["24"]="暴雨到大暴雨";
+    map["25"]="大暴雨到特大暴雨";
+    map["26"]="小到中雪";
+    map["27"]="中到大雪";
+    map["28"]="大到暴雪";
+    map["29"]="浮尘";
+    map["30"]="扬沙";
+    map["31"]="强沙尘暴";
+    map["53"]="霾";
+    map["99"]="无";
+    map["32"]="浓雾";
+    map["49"]="强浓雾";
+    map["54"]="中度霾";
+    map["55"]="重度霾";
+    map["56"]="严重霾";
+    map["57"]="大雾";
+    map["58"]="特强浓雾";
+    map["301"]="雨";
+    map["302"]="雪";
 }
 

@@ -110,13 +110,15 @@ void search::gotdata()
 void search::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
 {
     QString code=item->toolTip();
-    emit gotcitycode(code);
+    QString name = item->text().split("-").at(0);
+    emit gotcitycode(code , name);
     close();
 }
 
 void search::closeEvent(QCloseEvent *e){
     QString nocode="";
-    emit gotcitycode(nocode);
+    QString noname="";
+    emit gotcitycode(nocode , noname);
 }
 
 

@@ -44,7 +44,7 @@ private slots:
     void set7();
     void setsk();
     void seticons();
-    void gotcode(QString&);
+    void gotcode(QString& , QString&);
     void on_city_clicked();
     void trayiconactive();
     void callsetting();
@@ -54,6 +54,7 @@ private slots:
 private:
     Ui::tianqi *ui;
     QString citycode;
+    QString cityname;
 
     QNetworkReply *reply;
     QNetworkAccessManager *manager;
@@ -68,6 +69,7 @@ private:
     void creattrayicon();
     void updateicon(QImage& im,QLabel* icon);
     QImage  colorchange(QImage * origin);
+    void initmap();
 
     search *sear;
     setting* set;
@@ -83,7 +85,7 @@ private:
     //QAction *lockitem;
     QPixmap bgpix;
     int  usebgc;
-
+    QMap<QString , QString> map;
 protected :
          void paintEvent(QPaintEvent *);
 };
