@@ -67,8 +67,8 @@ private:
     void saveset();
     void readset();
     void creattrayicon();
-    void updateicon(QImage& im,QLabel* icon);
-    QImage  colorchange(QImage * origin);
+    void updateicon(QLabel* icon);
+    void  colorchange(QImage & origin);
     void initmap();
 
     search *sear;

@@ -104,7 +104,7 @@ void tianqi::set7(){
     re->deleteLater();
     qDebug()<<"Got 7day data.";
     manager->clearAccessCache();
-    qDebug()<<html;
+    //qDebug()<<html;
 
     reg.setPattern("{\".+?\"}");
     matchs=reg.globalMatch(html);
@@ -176,12 +176,12 @@ void tianqi::set7(){
         }
         QImage im;
         im.load(":/"+image);
-        im = colorchange(&im);
+         colorchange(im);
         QPixmap pixmap;
-        pixmap=pixmap.fromImage(im);
+        pixmap = pixmap.fromImage(im);
         int size = 40;
         if(it==0) size = 60;
-        pixmap=pixmap.scaled(size,size,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+        pixmap = pixmap.scaled(size,size,Qt::KeepAspectRatio,Qt::SmoothTransformation);
 
         switch(it)
         {
@@ -320,7 +320,7 @@ void tianqi::setsk(){
 
     QString html=re->readAll();
     re->deleteLater();
-    qDebug()<<html;
+    //qDebug()<<html;
     manager->clearAccessCache();
 
     if(html.indexOf("dataSK")!=-1 || html.indexOf("obs_forg")!=-1)
@@ -371,10 +371,11 @@ void tianqi::setsk(){
                 connect(reply,SIGNAL(finished()),this,SLOT(setbgimg()));
 
                 //想放在前面就只有去掉continue;
-                QImage image;
-                image.load(":/"+text+".png");
+                QString name = ":/"+text+".png";
+                QImage image(name , "QImage::Format_ARGB32");
+                //image.load(":/"+text+".png");
                 if(image.isNull()) continue;
-                image = colorchange(&image);
+                 colorchange(image);
               //  QPixmap pixmap(":/"+wea);
                 QPixmap pixmap ;
                 pixmap=pixmap.fromImage(image);
@@ -687,33 +688,33 @@ void tianqi::mouseReleaseEvent(QMouseEvent * event){
     update();
 }
 
-QImage  tianqi::colorchange(QImage * origin){
-  QImage newImage(origin->width(), origin->height(), QImage::Format_ARGB32);
+void  tianqi::colorchange(QImage & origin){
+ // QImage newImage(origin.width(), origin.height(), QImage::Format_ARGB32);
+  for(int y = 0; y<origin.height(); y++){
+    QRgb * line = (QRgb *)origin.scanLine(y);
 
-  for(int y = 0; y<newImage.height(); y++){
-    QRgb * line = (QRgb *)origin->scanLine(y);
-
-    for(int x = 0; x<newImage.width(); x++){
+    for(int x = 0; x<origin.width(); x++){
 
       int alp = qAlpha(line[x]);
       QColor color;
       color.setNamedColor(icolor);
       color.setAlpha(alp);
-      if(alp>0)  newImage.setPixel(x,y, color.rgba());
-      else newImage.setPixel(x,y, qRgba(255, 255, 255,0));
-      //qDebug()<<origin->width()<<origin->height()<<alp;
+      if(alp>0)  origin.setPixel(x,y, color.rgba());
+      else origin.setPixel(x,y, qRgba(255, 255, 255,0));
+      //qDebug()<<origin.width()<<origin.height()<<alp;
     }
-
   }
 
-  return newImage;
+  //return newImage;
 }
 
-void tianqi::updateicon(QImage& im,QLabel* icon)
+void tianqi::updateicon(QLabel* icon)
 {
-    im = colorchange(&im);
+    QImage im;
+    im = ui->icon->pixmap()->toImage();
+    colorchange(im);
     QPixmap pixmap;
-    pixmap=pixmap.fromImage(im);
+    pixmap = pixmap.fromImage(im);
     icon->setPixmap(pixmap);
 }
 
@@ -733,15 +734,10 @@ void tianqi::settheme(QString fc, QString bgc, QString ic, int alp,int ubgc)
     }
     if(!ic.isEmpty()&&icolor!=ic){
         icolor=ic;
-        QImage im;
-        im=ui->icon->pixmap()->toImage();
-        updateicon(im,ui->icon);
-        im=ui->icon2->pixmap()->toImage();
-        updateicon(im,ui->icon2);
-        im=ui->icon3->pixmap()->toImage();
-        updateicon(im,ui->icon3);
-        im=ui->icon4->pixmap()->toImage();
-        updateicon(im,ui->icon4);
+        updateicon(ui->icon);
+        updateicon(ui->icon2);
+        updateicon(ui->icon3);
+        updateicon(ui->icon4);
     }
     if(alp!=-1&&alph!=alp){
         alph=alp;
@@ -770,18 +766,18 @@ void tianqi::setbgimg(){
     qDebug()<<"set bg img";
     QNetworkReply *re = qobject_cast<QNetworkReply *>(sender());
     if(re->error() != QNetworkReply::NoError) {
-        bgpix = QPixmap();
+        bgpix = QPixmap(0,0);
         qDebug()<<"get bgimg error!"<<bgpix.isNull();
         return;
     }
-    QPixmap pix;
-    pix.loadFromData(re->readAll());
+    //QPixmap pix;
+    bgpix.loadFromData(re->readAll());
     int w , h;
-    w = pix.width();
-    h = pix.height();
+    w = bgpix.width();
+    h = bgpix.height();
     h = (this->height()*1.0/this->width()) * w ;
     //qDebug()<<w<<h;
-    bgpix = pix.copy(0,0,w,h);
+    bgpix = bgpix.copy(0,0,w,h);
     re->deleteLater();
     update();
 }
