@@ -435,7 +435,7 @@ void tianqi::setsk(){
                     else if(num<=100)
                     {
                         text+="良";
-                        pe.setColor(QPalette::Window,QColor(255, 171, 0));
+                        pe.setColor(QPalette::Window,QColor("#87CEFA"));
                         ui->pm25->setPalette(pe);
                       //  ui->pm25->setStyleSheet("background-color:rgb(255, 220, 19);color: rgb(255, 255, 255);");
 

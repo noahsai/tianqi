@@ -234,7 +234,7 @@
            </font>
           </property>
           <property name="text">
-           <string>    </string>
+           <string/>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -260,7 +260,7 @@
            </font>
           </property>
           <property name="text">
-           <string>    </string>
+           <string/>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -284,14 +284,20 @@
             <bold>false</bold>
            </font>
           </property>
+          <property name="layoutDirection">
+           <enum>Qt::RightToLeft</enum>
+          </property>
           <property name="text">
-           <string>   </string>
+           <string>       </string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
           </property>
           <property name="margin">
-           <number>1</number>
+           <number>0</number>
+          </property>
+          <property name="indent">
+           <number>0</number>
           </property>
          </widget>
         </item>
