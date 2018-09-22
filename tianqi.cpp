@@ -371,9 +371,8 @@ void tianqi::setsk(){
                 connect(reply,SIGNAL(finished()),this,SLOT(setbgimg()));
 
                 //想放在前面就只有去掉continue;
-                QString name = ":/"+text+".png";
-                QImage image(name , "QImage::Format_ARGB32");
-                //image.load(":/"+text+".png");
+                QImage image;
+                image.load(":/"+text+".png");
                 if(image.isNull()) continue;
                  colorchange(image);
               //  QPixmap pixmap(":/"+wea);
@@ -689,8 +688,8 @@ void tianqi::mouseReleaseEvent(QMouseEvent * event){
 }
 
 void  tianqi::colorchange(QImage & origin){
- // QImage newImage(origin.width(), origin.height(), QImage::Format_ARGB32);
-  for(int y = 0; y<origin.height(); y++){
+  QImage newImage(origin.width(), origin.height(), QImage::Format_ARGB32);
+  for(int y = 0; y<newImage.height(); y++){
     QRgb * line = (QRgb *)origin.scanLine(y);
 
     for(int x = 0; x<origin.width(); x++){
@@ -699,19 +698,19 @@ void  tianqi::colorchange(QImage & origin){
       QColor color;
       color.setNamedColor(icolor);
       color.setAlpha(alp);
-      if(alp>0)  origin.setPixel(x,y, color.rgba());
-      else origin.setPixel(x,y, qRgba(255, 255, 255,0));
+      if(alp>0)  newImage.setPixel(x,y, color.rgba());
+      else newImage.setPixel(x,y, qRgba(255, 255, 255,0));
       //qDebug()<<origin.width()<<origin.height()<<alp;
     }
   }
-
+origin = newImage;
   //return newImage;
 }
 
 void tianqi::updateicon(QLabel* icon)
 {
     QImage im;
-    im = ui->icon->pixmap()->toImage();
+    im = icon->pixmap()->toImage();
     colorchange(im);
     QPixmap pixmap;
     pixmap = pixmap.fromImage(im);
