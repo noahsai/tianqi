@@ -475,7 +475,7 @@ void tianqi::setsk(){
             }
         }
     }
-    QString text=ui->city->text()+" "+ui->temp->text()+"° "+ui->weather->text();
+    QString text=ui->city->text()+" "+ui->temp->text()+" "+ui->weather->text();
     trayIcon->setToolTip(text);
    // QPalette pal = palette();
 
