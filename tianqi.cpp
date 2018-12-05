@@ -8,7 +8,7 @@ tianqi::tianqi(QWidget *parent) :
     ui(new Ui::tianqi)
 {
     ui->setupUi(this);
-    setAttribute(Qt::WA_TranslucentBackground );//背景透明
+    setAttribute(Qt::WA_TranslucentBackground ,false);//背景不透明
     setWindowFlags(Qt::FramelessWindowHint
                    |Qt::Tool);
 
@@ -104,7 +104,7 @@ void tianqi::set7(){
     re->deleteLater();
     qDebug()<<"Got 7day data.";
     manager->clearAccessCache();
-    //qDebug()<<html;
+    qDebug()<<html;
 
     reg.setPattern("{\".+?\"}");
     matchs=reg.globalMatch(html);
@@ -154,7 +154,7 @@ void tianqi::set7(){
             date=reg.match(li).captured(0);
             reg.setPattern("fj\":\".+?(?=\")");//星期
             QString day=reg.match(li).captured(0);
-           date = date.right(2) + "(" + day.right(1) + ")";
+           date = date.right(2).remove("/") + "(" + day.right(1) + ")";
             //date.replace("（","\n（");
     //       reg.setPattern("(?<=001\":\").+?(?=\")");//天气
             reg.setPattern("(?<=fa\":\").+?(?=\")");//图标
@@ -167,9 +167,9 @@ void tianqi::set7(){
             else night = map.value(d);
 
             image = "d"+ image +".png";
-            reg.setPattern("(?<=fc\":\")\\d+?(?=\")");//温度
+            reg.setPattern("(?<=fc\":\")[-]{0,1}\\d+?(?=\")");//温度
             tmp=reg.match(li).captured(0);
-            reg.setPattern("(?<=fd\":\")\\d+?(?=\")");//温度
+            reg.setPattern("(?<=fd\":\")[-]{0,1}\\d+?(?=\")");//温度
             QString tmp2=reg.match(li).captured(0);
             if(it != 0) tmp = tmp +"/" +tmp2 + "°";
             qDebug()<<date<<tmp<<image;
@@ -515,6 +515,8 @@ void tianqi::readset(){
     citycode=settings.value("citycode",QString("101010100")).toString();//默认北京
     cityname=settings.value("cityname",QString("北京")).toString();
     ui->city->setText(cityname);
+    usebgc =settings.value("usebgc",1).toInt();
+
  //   resize(settings.value("size", QSize(154, 144)).toSize());//因为没得调大小，所以不要记录大小了
     //locked=settings.value("locked",false).toBool();
     //qDebug()<<"readset locked:"<<locked;
@@ -741,8 +743,8 @@ void tianqi::settheme(QString fc, QString bgc, QString ic, int alp,int ubgc)
     if(alp!=-1&&alph!=alp){
         alph=alp;
     }
-   if(ubgc!=-1) usebgc = ubgc;
-   update();
+    if(ubgc!=-1) usebgc = ubgc;
+    update();
 
 }
 
