@@ -141,9 +141,9 @@ void tianqi::set7(){
             else night = map.value(d);
 
             image = "d"+ image +".png";
-            reg.setPattern("(?<=003\":\")\\d+?(?=\")");//温度
+            reg.setPattern("(?<=003\":\")[-]{0,1}\\d+?(?=\")");//温度
             tmp=reg.match(li).captured(0);
-            reg.setPattern("(?<=004\":\")\\d+?(?=\")");//温度
+            reg.setPattern("(?<=004\":\")[-]{0,1}\\d+?(?=\")");//温度
             QString tmp2=reg.match(li).captured(0);
             if(it != 0) tmp = tmp +"/" +tmp2 + "°";
             qDebug()<<date<<tmp<<image;
